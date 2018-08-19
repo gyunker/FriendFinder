@@ -4,7 +4,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Political Friend</title>
+  <title>Friend Finder</title>
 
   <!-- Latest compiled and minified CSS & JS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
@@ -179,10 +179,10 @@
         </div>
         <div class="modal-body">
           <h2 id="match-name"></h2>
-          <img id="match-img" src="https://static.boredpanda.com/blog/wp-content/uploads/2017/09/funny-dog-thoughts-tweets-1.jpg" alt="">
+          <img id="match-img" src="" alt="" style="max-width:350px;">
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal" id="close">Close</button>
         </div>
       </div>
 
@@ -213,61 +213,83 @@
 
     // Capture the form inputs
     $("#submit").on("click", function(event) {
-      event.preventDefault();
+      if ($("#name").val() === "" || $("#photo").val() === "" || $("#q1").val() === "" || $("#q2").val() === ""
+       ||$("#q3").val() === "" || $("#q4").val() === "" || $("#q5").val() === "" || $("#q6").val() === "" 
+       || $("#q7").val() === "" || $("#q8").val() === "" || $("#q9").val() === "" || $("#q10").val() === ""
+      ){
+        alert("Oops. Not good enough.  Please answer ALL the questions.");
 
-      // Form validation
-      function validateForm() {
-        var isValid = true;
-        $(".form-control").each(function() {
-          if ($(this).val() === "") {
-            isValid = false;
-          }
-        });
-
-        $(".chosen-select").each(function() {
-
-          if ($(this).val() === "") {
-            isValid = false;
-          }
-        });
-        return isValid;
-      }
-
-      // If all required fields are filled
-      if (validateForm()) {
-        // Create an object for the user"s data
-        var userData = {
+        } else {
+          //Pull New Friend Information
+          var userData = {
           name: $("#name").val(),
           photo: $("#photo").val(),
           scores: [
-            $("#q1").val(),
-            $("#q2").val(),
-            $("#q3").val(),
-            $("#q4").val(),
-            $("#q5").val(),
-            $("#q6").val(),
-            $("#q7").val(),
-            $("#q8").val(),
-            $("#q9").val(),
-            $("#q10").val()
-          ]
-        };
+            parseInt($("#q1").val()),
+            parseInt($("#q2").val()),
+            parseInt($("#q3").val()),
+            parseInt($("#q4").val()),
+            parseInt($("#q5").val()),
+            parseInt($("#q6").val()),
+            parseInt($("#q7").val()),
+            parseInt($("#q8").val()),
+            parseInt($("#q9").val()),
+            parseInt($("#q10").val())
+          ]};
 
-        // AJAX post the data to the friends API.
-        $.post("/api/friends", userData, function(data) {
+          var matchName = "";
+          var matchURL = "";
+          var minDiff = "10000";
+          //Get data from friend ARRAY
+          $.get("/api/friends/", function(friend) {
+          // console.log(friend);
+          // console.log("Friend 1 " + friend[0].name);
+          // console.log("Score " + friend[0].scores[0]);
+          console.log("Number of friends = "+friend.length);
 
-          // Grab the result from the AJAX post so that the best match's name and photo are displayed.
-          $("#match-name").text(data.name);
-          $("#match-img").attr("src", data.photo);
+          for (i = 0; i < friend.length; i++){
+            var tempDiff = 
+              (Math.abs(userData.scores[0] - friend[i].scores[0])
+              + Math.abs(userData.scores[1] - friend[i].scores[1])
+              + Math.abs(userData.scores[2] - friend[i].scores[2])
+              + Math.abs(userData.scores[3] - friend[i].scores[3])
+              + Math.abs(userData.scores[4] - friend[i].scores[4])
+              + Math.abs(userData.scores[5] - friend[i].scores[5])
+              + Math.abs(userData.scores[6] - friend[i].scores[6])
+              + Math.abs(userData.scores[7] - friend[i].scores[7])
+              + Math.abs(userData.scores[8] - friend[i].scores[8])
+              + Math.abs(userData.scores[9] - friend[i].scores[9])
+            );
+            if (tempDiff < minDiff){
+            minDiff = tempDiff;
+              console.log("tempDiff = "+tempDiff);
+            matchName = friend[i].name;
+            matchURL = friend[i].photo;
+              console.log("matchName = "+matchName);
+              console.log("matchURL = "+matchURL);
+            };
+          };
 
-          // Show the modal with the best match
-          $("#results-modal").modal("toggle");
-
-        });
-      } else {
-        alert("Please fill out all fields before submitting!");
-      }
-    });
+            if (matchName != ""){
+              $.post("/api/friends", userData, function(data) {
+              // data = JSON.parse(data);
+              });
+              // console.log("User info posted");
+              // console.log(userData.name);
+              // console.log(userData.scores[0]);
+              $("#match-name").text(matchName);
+              $("#match-img").attr("src", matchURL);
+              // window.location.reload;
+              $("#results-modal").modal("toggle");
+            } else {
+              console.log("No match")
+            };
+            });
+          };
+      });
+      $("#close").on("click", function(event) {
+        window.location = "/survey";
+      });
   </script>
 
 </body>
